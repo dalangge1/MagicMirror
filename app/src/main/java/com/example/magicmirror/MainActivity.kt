@@ -1,4 +1,4 @@
-package com.example.cameratest
+package com.example.magicmirror
 
 import android.Manifest
 import android.content.Context
@@ -6,23 +6,19 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.media.Image
 import android.media.ImageReader
-import android.media.ImageReader.OnImageAvailableListener
 import android.os.Build
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
 import android.view.OrientationEventListener
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import java.nio.ByteBuffer
@@ -90,18 +86,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val mOnImageAvailableListener = OnImageAvailableListener { reader -> //进行相片存储
-        mCameraDevice.close()
-        //mSurfaceView.setVisibility(View.GONE);//存疑
-        val image: Image = reader.acquireNextImage()
-        val buffer: ByteBuffer = image.planes[0].buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes) //将image对象转化为byte，再转化为bitmap
-        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        if (bitmap != null) {
-            img_show.setImageBitmap(bitmap)
+    private val mOnImageAvailableListener =
+        ImageReader.OnImageAvailableListener { reader -> //进行相片存储
+            mCameraDevice.close()
+            //mSurfaceView.setVisibility(View.GONE);//存疑
+            val image: Image = reader.acquireNextImage()
+            val buffer: ByteBuffer = image.planes[0].buffer
+            val bytes = ByteArray(buffer.remaining())
+            buffer.get(bytes) //将image对象转化为byte，再转化为bitmap
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            if (bitmap != null) {
+                img_show.setImageBitmap(bitmap)
+            }
         }
-    }
 
     private val deviceStateCallback: CameraDevice.StateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
@@ -153,7 +150,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this@MainActivity, "配置失败", Toast.LENGTH_SHORT).show()
         }
     }
-    private val mSessionCaptureCallback: CaptureCallback = object : CaptureCallback() {
+    private val mSessionCaptureCallback: CameraCaptureSession.CaptureCallback = object : CameraCaptureSession.CaptureCallback() {
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             mSession = session
         }
@@ -214,7 +211,6 @@ class MainActivity : AppCompatActivity() {
         // the image upright relative to the device orientation
         return (sensorOrientation + deviceOrientation + 360) % 360
     }
-
 
 
 }
