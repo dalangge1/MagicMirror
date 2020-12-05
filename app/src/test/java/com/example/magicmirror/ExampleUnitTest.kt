@@ -1,4 +1,4 @@
-package com.example.cameratest
+package com.example.magicmirror
 
 import org.junit.Test
 
