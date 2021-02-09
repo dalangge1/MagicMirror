@@ -8,6 +8,7 @@ import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -15,12 +16,13 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import android.widget.Toast
 import androidx.annotation.NonNull
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.fragment_face_capture.*
 import java.nio.ByteBuffer
 
-
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class FragmentFaceCapture : Fragment() {
 
     override fun onCreateView(
@@ -53,7 +55,7 @@ class FragmentFaceCapture : Fragment() {
         val mSurfaceHolder = face_capture_surfaceView.holder
         mSurfaceHolder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                initCameraAndPreview();
+                initCameraAndPreview()
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -187,7 +189,7 @@ class FragmentFaceCapture : Fragment() {
     }
 
 
-    fun takePicture() {
+    private fun takePicture() {
         try {
             val captureRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE) //用来设置拍照请求的request
             captureRequestBuilder.addTarget(mImageReader.surface)
@@ -218,19 +220,19 @@ class FragmentFaceCapture : Fragment() {
 
     //获取图片应该旋转的角度，使图片竖直
     private fun getJpegOrientation(c: CameraCharacteristics, deviceOrientation: Int): Int {
-        var deviceOrientation = deviceOrientation
-        if (deviceOrientation == OrientationEventListener.ORIENTATION_UNKNOWN) return 0
+        var deviceOrientationTmp = deviceOrientation
+        if (deviceOrientationTmp == OrientationEventListener.ORIENTATION_UNKNOWN) return 0
         val sensorOrientation = c.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
 
         // Round device orientation to a multiple of 90
-        deviceOrientation = (deviceOrientation + 45) / 90 * 90
+        deviceOrientationTmp = (deviceOrientationTmp + 45) / 90 * 90
 
         // LENS_FACING相对于设备屏幕的方向,LENS_FACING_FRONT相机设备面向与设备屏幕相同的方向
         val facingFront = c.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
-        if (facingFront) deviceOrientation = -deviceOrientation
+        if (facingFront) deviceOrientationTmp = -deviceOrientationTmp
 
         // Calculate desired JPEG orientation relative to camera orientation to make
         // the image upright relative to the device orientation
-        return (sensorOrientation + deviceOrientation + 360) % 360
+        return (sensorOrientation + deviceOrientationTmp + 360) % 360
     }
 }
