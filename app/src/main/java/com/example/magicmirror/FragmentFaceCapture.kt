@@ -19,11 +19,16 @@ import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.example.magicmirror.utils.SavePic
+import com.example.magicmirror.utils.UploadFileUtil
 import kotlinx.android.synthetic.main.fragment_face_capture.*
+import model.MainApplication
 import java.nio.ByteBuffer
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class FragmentFaceCapture : Fragment() {
+
+    var isInitializing = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,10 +43,17 @@ class FragmentFaceCapture : Fragment() {
 
 
         face_capture_bt_capture.setOnClickListener {
+            if (isInitializing) {
+                return@setOnClickListener
+            }
+            isInitializing = true
             initCameraAndPreview()
             face_capture_surfaceView.postDelayed({
+                if (isInitializing) {
+                    return@postDelayed
+                }
                 takePicture()
-                Toast.makeText(context, "已获得图片bitmap，待上传", Toast.LENGTH_SHORT).show()
+
             }, 500)
         }
 
@@ -121,12 +133,19 @@ class FragmentFaceCapture : Fragment() {
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bitmap != null) {
                 face_capture_img_show.setImageBitmap(bitmap)
+
+                /**
+                 * 上传图片
+                 */
+                val path = SavePic.saveImage(activity!!, bitmap)
+                UploadFileUtil.uploadMultiFile((activity?.application as MainApplication).connectionUrlMain + "/MagicMirror?action=uploadPic", listOf(path))
             }
         }
 
     private val deviceStateCallback: CameraDevice.StateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
             mCameraDevice = camera
+            isInitializing = false
             try {
                 takePreview()
             } catch (e: CameraAccessException) {
