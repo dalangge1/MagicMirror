@@ -1,12 +1,15 @@
 package com.example.magicmirror
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
@@ -16,20 +19,40 @@ import com.amap.api.services.weather.LocalWeatherForecastResult
 import com.amap.api.services.weather.LocalWeatherLiveResult
 import com.amap.api.services.weather.WeatherSearch
 import com.amap.api.services.weather.WeatherSearchQuery
+import com.tbruyelle.rxpermissions2.RxPermissions
+import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_weather.*
 
 class FragmentWeather : Fragment() {
 
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_weather, container, false)
     }
 
+    @SuppressLint("CheckResult")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        if (ActivityCompat.checkSelfPermission(activity!!, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            val permissions = RxPermissions(this)
+            permissions.setLogging(true)
+            permissions.request(Manifest.permission.ACCESS_FINE_LOCATION)
+                .subscribe { aBoolean ->
+                    if (aBoolean == true) {
+                        getWeather()
+                    }
+                }
+            return
+        }
+
+        getWeather()
+
+    }
+
+    fun getWeather() {
         //声明AMapLocationClient类对象
         //声明AMapLocationClient类对象
         val mLocationClient: AMapLocationClient?
@@ -82,7 +105,6 @@ class FragmentWeather : Fragment() {
 
 
 
-
     }
     fun playWeather(cityCode: String) {
         //检索参数为城市和天气类型，实况天气为WEATHER_TYPE_LIVE、天气预报为WEATHER_TYPE_FORECAST
@@ -90,19 +112,24 @@ class FragmentWeather : Fragment() {
         val mweathersearch = WeatherSearch(activity)
         mweathersearch.setOnWeatherSearchListener(object : WeatherSearch.OnWeatherSearchListener {
             @SuppressLint("SetTextI18n")
-            override fun onWeatherLiveSearched(weatherLiveResult: LocalWeatherLiveResult?, rCode: Int) {
+            override fun onWeatherLiveSearched(
+                weatherLiveResult: LocalWeatherLiveResult?,
+                rCode: Int
+            ) {
                 if (rCode == 1000) {
                     if (weatherLiveResult?.liveResult != null) {
                         val weatherlive = weatherLiveResult.liveResult
                         weather_report_time.text = weatherlive.reportTime + "发布"
                         weather_text.text = weatherlive.city + "  " + weatherlive.weather
                         weather_temperature.text = weatherlive.temperature + "°"
-                        weather_wind.text = weatherlive.windDirection + "风     " + weatherlive.windPower + "级"
+                        weather_wind.text =
+                            weatherlive.windDirection + "风     " + weatherlive.windPower + "级"
                         weather_humidity.text = "湿度         " + weatherlive.humidity + "%"
 
                         val a = AMapNavi.getInstance(activity)
                         a.setUseInnerVoice(true, true)
-                        val s = weatherlive.city + "的天气是: " + weatherlive.weather + "，温度是  " + weatherlive.temperature + "度" + "   ，目前" + weatherlive.windDirection + "风" + weatherlive.windPower + "级" + "，湿度         " + weatherlive.humidity + "%" + "   ," + weatherlive.province + weatherlive.reportTime + "发布"
+                        val s =
+                            weatherlive.city + "的天气是: " + weatherlive.weather + "，温度是  " + weatherlive.temperature + "度" + "   ，目前" + weatherlive.windDirection + "风" + weatherlive.windPower + "级" + "，湿度         " + weatherlive.humidity + "%" + "   ," + weatherlive.province + weatherlive.reportTime + "发布"
                         Log.e("sandyzhang", a.playTTS(s, true).toString())
 
                     } else {

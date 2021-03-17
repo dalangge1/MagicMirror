@@ -36,5 +36,15 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <TextView
+            android:id="@+id/face_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="识别性别和表情"
+            app:layout_constraintBottom_toBottomOf="@+id/face_capture_surfaceView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/face_capture_surfaceView"
+            app:layout_constraintTop_toTopOf="@+id/face_capture_surfaceView" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.example.magicmirror.utils.CornerFrameLayout>

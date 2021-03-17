@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
  */
 
 object UploadFileUtil {
-    fun uploadMultiFile(url: String, path: List<String>) {
+    fun uploadMultiFile(url: String, path: List<String>, callback: (String) -> Unit) {
         val multipartBodyBuilder = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
         path.forEach {
@@ -39,7 +39,9 @@ object UploadFileUtil {
 
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
-                Log.i("sandyzhang", "uploadMultiFile() response=" + response.body!!.string())
+                val s = response.body!!.string()
+                Log.i("sandyzhang", "uploadMultiFile() response=$s")
+                callback.invoke(s)
             }
         })
     }

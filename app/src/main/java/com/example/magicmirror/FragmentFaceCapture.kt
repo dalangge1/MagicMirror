@@ -21,6 +21,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.magicmirror.utils.SavePic
 import com.example.magicmirror.utils.UploadFileUtil
+import com.tbruyelle.rxpermissions2.RxPermissions
+import io.reactivex.functions.Consumer
+import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.android.synthetic.main.fragment_face_capture.*
 import model.MainApplication
 import java.nio.ByteBuffer
@@ -40,9 +43,25 @@ class FragmentFaceCapture : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-
         face_capture_bt_capture.setOnClickListener {
+
+            if (ActivityCompat.checkSelfPermission(activity!!, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+//                ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.CAMERA), PackageManager.PERMISSION_GRANTED)
+                val permissions = RxPermissions(this)
+                permissions.setLogging(true)
+                permissions.request(Manifest.permission.CAMERA)
+                    .doOnError{
+                        it.printStackTrace()
+                    }
+                    .subscribe { aBoolean ->
+                        if (aBoolean == true) {
+                            initCameraAndPreview()
+                        }
+                    }.dispose()
+
+                return@setOnClickListener
+            }
+
             if (isInitializing) {
                 return@setOnClickListener
             }
@@ -113,7 +132,7 @@ class FragmentFaceCapture : Fragment() {
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mainHandler) //这里必须传入mainHandler，因为涉及到了Ui操作
             mCameraManager = activity!!.getSystemService(AppCompatActivity.CAMERA_SERVICE) as CameraManager
             if (ActivityCompat.checkSelfPermission(activity!!, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.CAMERA), PackageManager.PERMISSION_GRANTED)
+//                ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.CAMERA), PackageManager.PERMISSION_GRANTED)
                 return
             }
             mCameraManager.openCamera(mCameraId, deviceStateCallback, mHandler)
@@ -137,8 +156,12 @@ class FragmentFaceCapture : Fragment() {
                 /**
                  * 上传图片
                  */
+                face_text.text = "正在识别"
                 val path = SavePic.saveImage(activity!!, bitmap)
-                UploadFileUtil.uploadMultiFile((activity?.application as MainApplication).connectionUrlMain + "/MagicMirror?action=uploadPic", listOf(path))
+                UploadFileUtil.uploadMultiFile((activity?.application as MainApplication).connectionUrlMain + "/MagicMirror?action=uploadPic", listOf(path)) {
+                    response ->
+                    activity?.runOnUiThread { face_text.text = response }
+                }
             }
         }
 
