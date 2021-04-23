@@ -158,8 +158,10 @@ class FragmentFaceCapture : Fragment() {
                  */
                 face_text.text = "正在识别"
                 val path = SavePic.saveImage(activity!!, bitmap)
-                UploadFileUtil.uploadMultiFile((activity?.application as MainApplication).connectionUrlMain + "/MagicMirror?action=uploadPic", listOf(path)) {
-                    response ->
+                UploadFileUtil.uploadMultiFile(
+                    (activity?.application as MainApplication).connectionUrlMain + "MagicMirror?action=uploadPic",
+                    listOf(path)
+                ) { response ->
                     activity?.runOnUiThread { face_text.text = response }
                 }
             }

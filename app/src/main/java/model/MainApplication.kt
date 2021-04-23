@@ -8,7 +8,7 @@ import com.example.magicmirror.R
 
 class MainApplication : Application() {
 
-    val connectionUrlMain = "http://sandyz.ink:8080/MagicMirror"
+    val connectionUrlMain = "http://sandyz.ink:8080/MagicMirror/"
 
     companion object{
         lateinit var app: Application
